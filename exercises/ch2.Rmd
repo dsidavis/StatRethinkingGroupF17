@@ -1,0 +1,112 @@
+---
+title: "Statistical Rethinking - Exercises from  Chapter 2"
+author: "Hugo Mailhot"
+date: "October 9, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Medium
+
+
+### 2M1 
+*Recall the globe tossing model from the chapter. Compute and plot the grid approximate posterior distribution for each of the following sets of observations. In each case, assume a uniform prior for _p_.*
+
+```{r grid_computing}
+grid_approx <- function(p_grid, prior, k, n){
+    # compute likelihood at each value in grid
+    likelihood <- dbinom( k , size=n , prob=p_grid )
+    # compute product of likelihood and prior
+    unstd.posterior <- likelihood * prior
+    # standardize the posterior, so it sums to 1
+    posterior <- unstd.posterior / sum(unstd.posterior)
+    return(posterior)
+}
+
+# Since we are going to use the same code to plot each time,
+# wrap everything up in a single function.
+approx_and_plot <- function(p_grid, prior, k, n, points){
+    posterior <- grid_approx(p_grid, prior, k, n)
+    plot( p_grid , posterior , type="b" ,
+          xlab="probability of water" , ylab="posterior probability" )
+    mtext( paste(points, " points" ))
+}
+```
+
+Here we define our grid and uniform prior, which we'll use in the next 3 approximations.
+
+```{r uniform_prior}
+points <- 30
+p_grid <- seq( from=0 , to=1 , length.out=points )
+uni_prior <- rep(1, points)
+```
+
+#### 1) W, W, W
+
+
+```{r 2M1.1}
+approx_and_plot(p_grid, uni_prior, k=3, n=3, points)
+```
+
+#### 2) W, W, W, L
+
+```{r 2M1.2}
+approx_and_plot(p_grid, uni_prior, k=3, n=4, points)
+```
+
+#### 3) L, W, W, L, W, W, W
+
+```{r 2M1.3}
+approx_and_plot(p_grid, uni_prior, k=5, n=7, points)
+```
+
+### 2M2 
+*Now assume a prior for p that is equal to zero when p < 0.5 and is a positive constant when p ≥ 0.5. Again compute and plot the grid approximate posterior distribution for each of the sets of observations in the problem just above.*
+
+Define the new prior
+
+```{r step_prior}
+step_prior <-rep( c(0,1), each = points/2)
+```
+
+#### 1) W, W, W
+
+
+```{r 2M2.1}
+approx_and_plot(p_grid, step_prior, k=3, n=3, points)
+```
+
+#### 2) W, W, W, L
+
+```{r 2M2.2}
+approx_and_plot(p_grid, step_prior, k=3, n=4, points)
+```
+
+#### 3) L, W, W, L, W, W, W
+
+```{r 2M2.3}
+approx_and_plot(p_grid, step_prior, k=5, n=7, points)
+```
+
+## 2M3
+
+*Suppose there are two globes, one for Earth and one for Mars. The Earth globe is 70% covered in water. The Mars globe is 100% land. Further suppose that one of these globes—you don’t know which was tossed in the air and produced a “land” observation. Assume that each globe was equally likely to be tossed. Show that the posterior probability that the globe was the Earth, conditional on seeing “land” (Pr(Earth|land)), is 0.23.*
+
+First use Bayes' Theorem:
+$$P(Earth|land) = \frac{P(land|Earth)P(Earth)}{P(land)}$$
+
+Now show the following:
+$$\frac{P(land|Earth)P(Earth)}{P(land)} = 0.23$$
+
+From the problem description we know the following:
+$$P(Earth) = 0.5$$
+$$P(land|Earth) = 1 - 0.7 = 0.3$$
+$$P(land) = (1 + 0.3)/2 = 0.65$$
+
+This last one is because without knowing which planet we have, the probability of land is the average probability of land between the two of them.
+
+Putting everything together:
+$$P(Earth|land) = \frac{0.3 \times 0.5}{0.65} \approx 0.23 $$
