@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(kableExtra)
+library(knitr)
 ```
 
 ## Medium
@@ -33,6 +35,12 @@ approx_and_plot <- function(p_grid, prior, k, n, points){
     plot( p_grid , posterior , type="b" ,
           xlab="probability of water" , ylab="posterior probability" )
     mtext( paste(points, " points" ))
+}
+
+# This helps printing pretty tables from dataframes in our HTML document
+pprint <- function(df){
+  kable(df, "html") %>%
+  kable_styling(bootstrap_options = "striped", full_width = F)
 }
 ```
 
@@ -91,7 +99,7 @@ approx_and_plot(p_grid, step_prior, k=3, n=4, points)
 approx_and_plot(p_grid, step_prior, k=5, n=7, points)
 ```
 
-## 2M3
+### 2M3
 
 *Suppose there are two globes, one for Earth and one for Mars. The Earth globe is 70% covered in water. The Mars globe is 100% land. Further suppose that one of these globes—you don’t know which was tossed in the air and produced a “land” observation. Assume that each globe was equally likely to be tossed. Show that the posterior probability that the globe was the Earth, conditional on seeing “land” (Pr(Earth|land)), is 0.23.*
 
@@ -110,3 +118,119 @@ This last one is because without knowing which planet we have, the probability o
 
 Putting everything together:
 $$P(Earth|land) = \frac{0.3 \times 0.5}{0.65} \approx 0.23 $$
+
+### 2M4
+
+*Suppose you have a deck with only three cards. Each card has two sides, and each side is eitherblack or white. One card has two black sides. The second card has one black and one white side. Thethird card has two white sides. Now suppose all three cards are placed in a bag and shuffled. Someone reaches into the bag and pulls out a card and places it flat on a table. A black side is shown facing up,but you don’t know the color of the side facing down. Show that the probability that the other side isalso black is 2/3. Use the counting method (Section 2 of the chapter) to approach this problem. Thismeans counting up the ways that each card could produce the observed data (a black side facing upon the table).*
+
+There are 3 ways one card can be pulled from the bag and placed on the table with a black side facing up. One is the black-and-white card being pulled and placed with the white side facing down. The two other ways are the all-black card being pulled and placed with **either** of its side facing up. So knowing that a black side is facing up, we have $2/3$ probability of it being the all-black card.
+
+### 2M5
+
+*Now suppose there are four cards: B/B, B/W, W/W, and another B/B. Again suppose a card is drawn from the bag and a black side appears face up. Again calculate the probability that the other side is black.*
+
+Now there are 5 ways to draw a card and place it with a black side facing up. 2 all-black cards account for 4 of these five ways, so in $4/5$ of the ways the other side is also black.
+
+### 2M6
+
+*Imagine that black ink is heavy, and so cards with black sides are heavier than cards with whitesides. As a result, it’s less likely that a card with black sides is pulled from the bag. So again assumethere are three cards: B/B, B/W, and W/W. After experimenting a number of times, you conclude thatfor every way to pull the B/B card from the bag, there are 2 ways to pull the B/W card and 3 ways topull the W/W card. Again suppose that a card is pulled and a black side appears face up. Show thatthe probability the other side is black is now 0.5. Use the counting method, as before.*
+
+This questions asks us to apply our knowledge of counting using both **likelihood** and **prior counts/probability** of events (see pp. 26-27 and p. 37). The prior counts in our case are:
+
+```{r 2M6_priors}
+prior_count = c(1, 2, 3)
+card = c("B/B", "B/W", "W/W")
+df_2m6 = data.frame(prior_count, row.names=card)
+pprint(df_2m6)
+```
+
+We still have the same number of ways of having a black face up that we counted in 2M4: 2 ways with the B/B card, and 1 way with the B/W card.
+
+```{r 2M6_likelihoods}
+df_2m6$likelihood <- c(2, 1, 0)
+pprint(df_2m6)
+```
+
+Now we multiply prior_count with likelihood for each row, then normalize over the sum of all such products.
+
+```{r 2M6_probabilities}
+df_2m6$unstd_probability <- df_2m6$prior_count * df_2m6$likelihood
+df_2m6$probability <- df_2m6$unstd_probability / sum(df_2m6$unstd_probability)
+pprint(df_2m6)
+```
+
+### 2M7
+
+*Assume again the original card problem, with a single card showing a black side face up. Beforelooking at the other side, we draw another card from the bag and lay it face up on the table. The facethat is shown on the new card is white. Show that the probability that the first card, the one showinga black side, has black on its other side is now 0.75. Use the counting method, if you can. Hint: Treat this like the sequence of globe tosses, counting all the ways to see each observation, for each possible first card.*
+
+We can simply use the probabilities for the first card face that we already know, and multiply these by the new likelihoods for observing the second card face given the first event. This is a case of **Bayesian updating** (p. 29), and in this context our old likelihoods are the **priors**. 
+
+* If we picked B/B first, then there are **3** ways to pick a card with a white face: 1 by way of the B/W card, and 2 by way of the W/W card (remember it counts twice because there is two ways to get a white face with W/W). 
+* If we picked B/W first, then there are **2** ways to get a white faced card. 
+* If we picked W/W first, there is only **1** way left to pick another white face (not that we care right now, since there was 0 prior probability of that happening).
+
+We use these numbers as our new likelihoods, and multiply them with the priors, then normalize by the sum of product.
+
+```{r 2m7}
+df_2m7 <- data.frame(c(2/3, 1/3, 0), row.names=rownames(df_2m6))
+names(df_2m7) <- c("prior")
+df_2m7$likelihood <- c(3, 2, 1)
+df_2m7$unstd_probability <- df_2m7$prior * df_2m7$likelihood
+df_2m7$probability <- df_2m7$unstd_probability / sum(df_2m7$unstd_probability)
+pprint(df_2m7)
+```
+
+
+## Hard
+
+### 2H1
+
+*Suppose there are two species of panda bear. Both are equally common in the wild and live in the same places. They look exactly alike and eat the same food, and there is yet no genetic assay capable of telling them apart. They differ however in their family sizes. Species A gives birth to twins 10% of the time, otherwise birthing a single infant. Species B births twins 20% of the time, otherwise birthing singleton infants. Assume these numbers are known with certainty, from many years of field research.*
+
+*Now suppose you are managing a captive panda breeding program. You have a new female panda of unknown species, and she has just given birth to twins. What is the probability that her next birth will also be twins?*
+
+This should strike you as a problem where you must apply Bayes' Theorem: we are given prior probabilities and some conditional probabilities, and we're looking for some other conditional probability.
+
+From the problem we can say the following. Let $T$ be the event that twins were born, and $A$ and $B$ be the events that the mother was from species A or B, respectively. Then:
+
+* $P(T|A) = .1$
+* $P(T|B) = .2$
+* $P(A) = P(B) = .5$  <- because "both are equally common in wild and live in the same places"
+
+Let $T_2$ be the event of the second birth also being twins. We want to find $P(T_2 | T)$. This is equal to the probability of twins if the mother is of species A times the probability the mother is from species A **plus** the analoguous probability if the mother is from species B. 
+
+Formally:
+$$P(T_2 | T) = P(T|A) \cdot P(A|T) + P(T|B) \cdot P(B|T)$$
+
+We just need to find out about $P(A|T)$ and $P(B|T)$. Using Bayes' Theorem:
+$$P(A|T) = \frac{P(T|A) P(A)}{P(T)} = \frac{.1 \times .5}{.15} = 1/3$$
+
+We knew $P(T)$ for the same reason we knew $P(land)$ in problem 2M3. Same procedure for $P(B|T)$ now:
+$$P(B|T) = \frac{P(T|B) P(B)}{P(T)} = \frac{.2 \times .5}{.15} = 2/3$$
+
+Just plug everything in the first equation:
+$$P(T_2 | T) = P(T|A) \cdot P(A|T) + P(T|B) \cdot P(B|T) = .1 \times 1/3 + .2 \times 2/3 = 5/30 \approx .16$$
+
+Notice how the probability of twins goes up from its starting point of 0.15. Does that make intuitive sense to you?
+
+### 2H2
+
+Well that's just $P(A|T)$, which we already know to be 1/3 from 2H1. Weird question ordering...
+
+### 2H3
+
+Here we have priors from the first birth, $P(A|T)$ and $P(B|T)$, and the likelihoods are the probabilities of singleton birth for each species, which is just $1 - P(T|species)$ in each case (is that clear to you?). This is another case of **Bayesian updating** (p.29).
+
+```{r 2h3}
+prior = c(1/3, 2/3)
+df_2h3 <- data.frame(prior, row.names=c("A", "B"))
+df_2h3$likelihood <- c(0.9, 0.8)
+df_2h3$unstd_probability <- df_2h3$prior * df_2h3$likelihood
+df_2h3$probability <- df_2h3$unstd_probability / sum(df_2h3$unstd_probability)
+pprint(df_2h3)
+```
+
+Observe how our prior belief that we had a mother from species A was increased by new evidence.
+
+### 2H4
+
