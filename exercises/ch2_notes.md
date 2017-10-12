@@ -22,15 +22,18 @@ slope around p = 0.5. In reality, this should be a vertical line, as
 the probability goes to exactly zero at exactly this point. Just be
 clear that the plot is not quite right.
 
-2M3: The intuition on the last part of of Bayes Theorem is not quite
-correct. Rather, this quantity is the joint probability of all the
-different circumstances under which land can occur, i.e. p(land) =
-p(land) * p(earth) + p(land) * p(mars). In practice, this is a
+2M3: ~~the intuition on the last part of of Bayes Theorem is not quite~~
+~~correct. Rather, this quantity is the joint probability of all the~~
+~~different circumstances under which land can occur, i.e. p(land) =~~
+~~p(land) * p(earth) + p(land) * p(mars).~~ In practice, this is a
 normalizing constant and we ignore it in most Bayesian methods. This
 ends up being a life-saver, because in more complicated situations,
 this term can be impossible to calculate (e.g., what is the
 probability of an individual X occuring? Now what is the joint
 probability of all the Xs?). 
+
+Hugo: *Thanks for the catch. I fixed the reasoning and struck through what
+doesn't apply anymore.*
 
 2M4: This is related to the classic [Monty Hall
 Problem](https://en.wikipedia.org/wiki/Monty_Hall_problem).
